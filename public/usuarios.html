@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Recursos Humanos — PYME2025</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h2>Alta de Empleado</h2>
+  <form id="add-user">
+    <input type="text" id="name" placeholder="Nombre completo" required>
+    <select id="role">
+      <option value="2">Dueño</option>
+      <option value="3">Administrador</option>
+      <!-- etc. -->
+    </select>
+    <input type="email" id="email" placeholder="Correo" required>
+    <input type="password" id="pass" placeholder="Contraseña" required>
+    <button type="submit">Crear</button>
+    <p id="status"></p>
+  </form>
+  <script type="module" src="../src/script.js"></script>
+</body>
+</html>
