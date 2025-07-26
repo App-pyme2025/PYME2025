@@ -119,3 +119,43 @@ function redirectByRole(role_id) {
     default: window.location.href = 'login.html';
   }
 }
+// MÓDULO: Alta de Usuarios por RRHH
+const addUserForm = document.getElementById('add-user');
+if (addUserForm) {
+  addUserForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const status = document.getElementById('status');
+    status.textContent = '';
+
+    // Recoge valores del formulario
+    const data = Object.fromEntries(new FormData(addUserForm));
+    const {
+      full_name, email, phone, address,
+      emergency_phone, emergency_contact,
+      photo_url, password, nss,
+      rfc, curp, blood_type, role_id
+    } = data;
+
+    // 1) Crear usuario en Auth y perfil en Profiles
+    const { error: fnError } = await supabase.rpc(
+      'create_user_with_profile',
+      { p_email: email,
+        p_password: password,
+        p_full_name: full_name,
+        p_phone: phone,
+        p_address: address,
+        p_emergency_phone: emergency_phone,
+        p_emergency_contact: emergency_contact,
+        p_role_id: Number(role_id)
+      }
+    );
+
+    if (fnError) {
+      status.textContent = fnError.message;
+      return;
+    }
+
+    status.textContent = 'Usuario registrado con éxito.';
+    addUserForm.reset();
+  });
+}
