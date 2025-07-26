@@ -2,17 +2,19 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Login — PYME2025</title>
+  <title>Login – PYME2025</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <form id="login-form">
-    <h2>Acceso</h2>
-    <input type="email" id="email" placeholder="Correo" required>
-    <input type="password" id="password" placeholder="Contraseña" required>
-    <button type="submit">Entrar</button>
-    <p id="msg"></p>
-  </form>
+  <header><h1>Acceso a PYME2025</h1></header>
+  <section>
+    <form id="login-form">
+      <input type="email" name="email" placeholder="Correo" required>
+      <input type="password" name="password" placeholder="Contraseña" required>
+      <button type="submit">Entrar</button>
+      <p id="msg"></p>
+    </form>
+  </section>
   <script type="module" src="../src/script.js"></script>
 </body>
 </html>
