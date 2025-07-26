@@ -2,23 +2,44 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Recursos Humanos — PYME2025</title>
+  <title>Alta de Usuarios – PYME2025</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h2>Alta de Empleado</h2>
-  <form id="add-user">
-    <input type="text" id="name" placeholder="Nombre completo" required>
-    <select id="role">
-      <option value="2">Dueño</option>
-      <option value="3">Administrador</option>
-      <!-- etc. -->
-    </select>
-    <input type="email" id="email" placeholder="Correo" required>
-    <input type="password" id="pass" placeholder="Contraseña" required>
-    <button type="submit">Crear</button>
-    <p id="status"></p>
-  </form>
+  <header><h1>Recursos Humanos – Alta de Usuario</h1></header>
+  <section>
+    <form id="add-user">
+      <input name="full_name" placeholder="Nombre completo" required>
+      <input name="email" type="email" placeholder="Correo electrónico" required>
+      <input name="phone" placeholder="Teléfono" required>
+      <input name="address" placeholder="Dirección" required>
+      <input name="emergency_phone" placeholder="Tel. de emergencia" required>
+      <input name="emergency_contact" placeholder="Contacto de emergencia" required>
+
+      <!-- Opcionales -->
+      <input name="photo_url" placeholder="URL de fotografía">
+      <input name="password" type="password" placeholder="Contraseña (8+ cta)" required>
+      <input name="nss" placeholder="NSS">
+      <input name="rfc" placeholder="RFC">
+      <input name="curp" placeholder="CURP">
+      <input name="blood_type" placeholder="Tipo de sangre">
+
+      <select name="role_id" required>
+        <option value="">Selecciona rol</option>
+        <option value="1">Superusuario</option>
+        <option value="2">Chef</option>
+        <option value="3">Administrador</option>
+        <option value="4">Supervisor</option>
+        <option value="5">Técnico</option>
+        <option value="6">Auditor</option>
+        <option value="7">Ventas</option>
+        <option value="8">Caja</option>
+      </select>
+
+      <button type="submit">Registrar Usuario</button>
+      <p id="status"></p>
+    </form>
+  </section>
   <script type="module" src="../src/script.js"></script>
 </body>
 </html>
