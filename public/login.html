@@ -3,8 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Login – PYME2025</title>
-
-  <!-- Estilos login -->
   <style>
     :root {
       --azul-claro: #5DADE2;
@@ -14,79 +12,55 @@
     }
     * { box-sizing: border-box; }
     body {
-      margin: 0; padding: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background-color: var(--gris-claro);
-      display: flex; justify-content: center; align-items: center;
-      height: 100vh;
+      margin:0; padding:0;
+      font-family:'Segoe UI',sans-serif;
+      background:var(--gris-claro);
+      display:flex; align-items:center; justify-content:center;
+      height:100vh;
     }
-    .login-container {
-      background: var(--blanco);
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      width: 320px;
-      text-align: center;
+    .cajalogin {
+      background:var(--blanco);
+      padding:30px;
+      border-radius:8px;
+      box-shadow:0 2px 8px rgba(0,0,0,0.1);
+      width:320px; text-align:center;
     }
-    .login-container h1 {
-      margin: 0 0 20px;
-      color: var(--azul-claro);
-      font-size: 1.6em;
+    .cajalogin h1 { margin-bottom:20px; color:var(--azul-claro); }
+    .cajalogin input {
+      width:100%; padding:10px; margin:8px 0;
+      border:1px solid var(--gris-oscuro); border-radius:4px;
     }
-    .login-container input {
-      width: 100%; padding: 10px; margin: 8px 0;
-      border: 1px solid var(--gris-oscuro);
-      border-radius: 4px;
+    .cajalogin button {
+      width:100%; padding:10px; margin:12px 0;
+      border:none; border-radius:4px;
+      background:var(--azul-claro); color:var(--blanco);
+      cursor:pointer; font-size:1em;
     }
-    .login-container button {
-      width: 100%; padding: 10px; margin: 12px 0;
-      background: var(--azul-claro); color: var(--blanco);
-      border: none; border-radius: 4px; cursor: pointer;
-      font-size: 1em;
-    }
-    .login-container button.google {
-      background: #ea4335; /* rojo Google */
-    }
-    .login-container button:hover {
-      opacity: 0.9;
-    }
-    .login-footer {
-      display: flex; justify-content: space-between;
-      font-size: 0.9em; margin-top: 10px;
-    }
-    .login-footer a {
-      color: var(--gris-oscuro); text-decoration: none;
-    }
-    .login-footer a:hover {
-      text-decoration: underline;
-    }
-    #msg {
-      color: red; font-size: 0.9em; height: 1.2em;
-      margin-top: 5px;
-    }
+    .cajalogin button.google { background:#ea4335; }
+    .pie { display:flex; justify-content:space-between; font-size:0.9em; }
+    .pie a { color:var(--gris-oscuro); text-decoration:none; }
+    #msg { color:red; min-height:1.2em; }
   </style>
 </head>
 <body>
-
-  <div class="login-container">
+  <div class="cajalogin">
     <h1>Acceso PYME2025</h1>
 
     <form id="login-form">
-      <input id="login-id" type="email" placeholder="Nombre de usuario / Email" required>
-      <input id="login-password" type="password" placeholder="Contraseña" required>
-      <button id="login-btn" type="submit">Acceso</button>
+      <input id="login-id"       type="email"    placeholder="Nombre de usuario / Email" required>
+      <input id="login-password" type="password" placeholder="Contraseña"             required>
+      <button id="login-btn">Acceso</button>
       <div id="msg"></div>
     </form>
 
     <button id="google-btn" class="google">Acceso con Google</button>
 
-    <div class="login-footer">
-      <a id="reset-btn" href="#">Recuperar contraseña</a>
-      <a id="register-btn" href="#">Registrar nuevo usuario</a>
+    <div class="pie">
+      <a id="reset-btn"    href="#">Recuperar contraseña</a>
+      <a id="register-btn" href="#">Registro nuevo usuario</a>
     </div>
   </div>
 
-  <!-- Carga nuestro script de autenticación -->
   <script type="module" src="../src/script.js"></script>
 </body>
 </html>

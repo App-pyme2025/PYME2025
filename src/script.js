@@ -1,57 +1,45 @@
 // src/script.js
 import { supabase } from './supabaseClient.js';
 
-// Mostrar mensajes de error/info
 function showMsg(text) {
   const el = document.getElementById('msg');
-  el.textContent = text;
+  el && (el.textContent = text);
 }
 
-// 1) Formulario de login
+// 1) Login con email/clave
 const loginForm = document.getElementById('login-form');
-loginForm.addEventListener('submit', async e => {
-  e.preventDefault();
-  showMsg('');
-
-  const email    = document.getElementById('login-id').value.trim();
-  const password = document.getElementById('login-password').value;
-
-  // Sign in con email/contraseña
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-  if (error) {
-    // Si el email no existe → registro
-    if (error.status === 400) {
-      return window.location.href = 'solicitud.html';
+if (loginForm) {
+  loginForm.addEventListener('submit', async e => {
+    e.preventDefault(); showMsg('');
+    const email    = document.getElementById('login-id').value.trim();
+    const password = document.getElementById('login-password').value;
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      if (error.status === 400) return window.location.href = 'solicitud.html';
+      return showMsg(error.message);
     }
-    return showMsg(error.message);
-  }
-  // Login correcto → redirigir a dashboard
-  window.location.href = 'dashboard.html';
-});
+    window.location.href = 'dashboard.html';
+  });
+}
 
-// 2) Botón “Recuperar contraseña”
-const resetBtn = document.getElementById('reset-btn');
-resetBtn.addEventListener('click', async e => {
-  e.preventDefault();
+// 2) Recuperar contraseña
+document.getElementById('reset-btn').addEventListener('click', async e => {
+  e.preventDefault(); showMsg('');
   const email = document.getElementById('login-id').value.trim();
   if (!email) return showMsg('Ingresa tu correo para recuperar contraseña');
-
-  const { data, error } = await supabase.auth.resetPasswordForEmail(email);
+  const { error } = await supabase.auth.resetPasswordForEmail(email);
   if (error) return showMsg(error.message);
   showMsg('Revisa tu correo para restablecer contraseña');
 });
 
-// 3) Botón “Registrar nuevo usuario”
-const registerBtn = document.getElementById('register-btn');
-registerBtn.addEventListener('click', e => {
+// 3) Registrarse
+document.getElementById('register-btn').addEventListener('click', e => {
   e.preventDefault();
   window.location.href = 'solicitud.html';
 });
 
-// 4) Botón “Acceso con Google”
-const googleBtn = document.getElementById('google-btn');
-googleBtn.addEventListener('click', async () => {
+// 4) OAuth Google
+document.getElementById('google-btn').addEventListener('click', async () => {
   const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
-  if (error) showMsg(error.message);
+  error && showMsg(error.message);
 });
