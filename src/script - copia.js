@@ -44,70 +44,37 @@ document.getElementById('login-form')?.addEventListener('submit', async e => {
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
+    // Ya no redirige a alta; solo muestra mensaje de credenciales inválidas
     return showMsg(
       'El usuario no existe o hay un error en tus credenciales (Usuario/contraseña)'
     );
   }
 
+  // Éxito: iniciar watcher y enviar al dashboard
   setupIdleWatcher();
   window.location.href = 'dashboard.html';
 });
 
-// 2) Registro nuevo usuario (solo al hacer clic)
+// 2) Recuperar contraseña
+document.getElementById('reset-btn')?.addEventListener('click', async e => {
+  e.preventDefault();
+  showMsg('');
+  const email = document.getElementById('login-id').value.trim();
+  if (!email) return showMsg('Ingresa tu correo para recuperar contraseña');
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email);
+  if (error) return showMsg(error.message);
+  showMsg('Revisa tu correo para restablecer contraseña');
+});
+
+// 3) Registro nuevo usuario (solo al hacer clic)
 document.getElementById('register-btn')?.addEventListener('click', e => {
   e.preventDefault();
   window.location.href = 'solicitud.html';
 });
 
-// 3) OAuth Google
+// 4) OAuth Google
 document.getElementById('google-btn')?.addEventListener('click', async () => {
   const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
   if (error) showMsg(error.message);
-});
-
-// 4) Funcionalidad Modal Reset Password
-const resetBtn        = document.getElementById('reset-btn');
-const resetModal      = document.getElementById('reset-modal');
-const resetCancelBtn  = document.getElementById('reset-cancel-btn');
-const resetSubmitBtn  = document.getElementById('reset-submit-btn');
-const resetEmailInput = document.getElementById('reset-email-input');
-const resetMsgModal   = document.getElementById('reset-msg');
-
-// Abrir modal
-resetBtn?.addEventListener('click', e => {
-  e.preventDefault();
-  showMsg(''); 
-  resetEmailInput.value = '';
-  resetMsgModal.textContent = '';
-  resetMsgModal.style.color = 'red';
-  resetModal.classList.remove('hidden');
-});
-
-// Cerrar modal con botón
-resetCancelBtn?.addEventListener('click', () => {
-  resetModal.classList.add('hidden');
-});
-
-// Cerrar modal al clic fuera del contenido
-resetModal?.addEventListener('click', e => {
-  if (e.target === resetModal) {
-    resetModal.classList.add('hidden');
-  }
-});
-
-// Enviar solicitud de restablecer contraseña
-resetSubmitBtn?.addEventListener('click', async () => {
-  const email = resetEmailInput.value.trim();
-  if (!email) {
-    resetMsgModal.textContent = 'Ingresa un correo válido';
-    return;
-  }
-
-  const { error } = await supabase.auth.resetPasswordForEmail(email);
-  if (error) {
-    resetMsgModal.textContent = error.message;
-  } else {
-    resetMsgModal.style.color = 'green';
-    resetMsgModal.textContent = 'Revisa tu correo para el enlace';
-  }
 });
