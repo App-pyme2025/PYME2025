@@ -76,7 +76,7 @@ const resetMsgModal   = document.getElementById('reset-msg');
 // Abrir modal
 resetBtn?.addEventListener('click', e => {
   e.preventDefault();
-  showMsg(''); 
+  showMsg('');
   resetEmailInput.value = '';
   resetMsgModal.textContent = '';
   resetMsgModal.style.color = 'red';
@@ -103,6 +103,19 @@ resetSubmitBtn?.addEventListener('click', async () => {
     return;
   }
 
+  // Validar que el correo está registrado
+  const { data: exists, error: rpcError } = await supabase.rpc('email_exists', { p_email: email });
+  if (rpcError) {
+    console.error('RPC error:', rpcError);
+    resetMsgModal.textContent = 'Error al verificar el correo';
+    return;
+  }
+  if (!exists) {
+    resetMsgModal.textContent = 'Ese correo no está registrado';
+    return;
+  }
+
+  // Enviar correo de restablecimiento
   const { error } = await supabase.auth.resetPasswordForEmail(email);
   if (error) {
     resetMsgModal.textContent = error.message;
