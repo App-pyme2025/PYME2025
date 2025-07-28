@@ -2,21 +2,40 @@
 
 import { supabase } from './supabaseClient.js';
 
+//
+// 0) Auth Guard: redirige a login si no hay sesión activa
+//
+(async () => {
+  const publicPages = ['login.html', 'solicitud.html', 'reset-password.html'];
+  const currentPage = window.location.pathname.split('/').pop();
+  if (!publicPages.includes(currentPage)) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      window.location.href = 'login.html';
+    }
+  }
+})();
+
+//
+// 1) Mensajes
+//
 function showMsg(text) {
   const el = document.getElementById('msg');
   el && (el.textContent = text);
 }
 
-// 30 minutos de inactividad -> cerrar sesión
+//
+// 2) Idle Watcher (30 min inactividad -> logout)
+//
 const IDLE_TIMEOUT = 30 * 60 * 1000;
 function resetIdleTimer() {
   localStorage.setItem('lastActivity', Date.now().toString());
 }
 function setupIdleWatcher() {
   resetIdleTimer();
-  ['click', 'keydown', 'mousemove', 'scroll', 'touchstart'].forEach(evt =>
-    document.addEventListener(evt, resetIdleTimer)
-  );
+  ['click', 'keydown', 'mousemove', 'scroll', 'touchstart']
+    .forEach(evt => document.addEventListener(evt, resetIdleTimer));
+
   setInterval(async () => {
     const last = parseInt(localStorage.getItem('lastActivity') || '0', 10);
     if (Date.now() - last > IDLE_TIMEOUT) {
@@ -26,16 +45,20 @@ function setupIdleWatcher() {
   }, 60 * 1000);
 }
 
-// Al cargar la página: si hay sesión activa, iniciar watcher y redirigir al dashboard
+//
+// 3) Si ya hay sesión activa, ir a dashboard
+//
 window.addEventListener('DOMContentLoaded', async () => {
   const { data: { session } } = await supabase.auth.getSession();
-  if (session) {
+  if (session && window.location.pathname.endsWith('login.html')) {
     setupIdleWatcher();
     window.location.href = 'dashboard.html';
   }
 });
 
-// 1) Login con email/clave
+//
+// 4) Login con email/clave
+//
 document.getElementById('login-form')?.addEventListener('submit', async e => {
   e.preventDefault();
   showMsg('');
@@ -45,7 +68,7 @@ document.getElementById('login-form')?.addEventListener('submit', async e => {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
     return showMsg(
-      'El usuario no existe o hay un error en tus credenciales (Usuario/contraseña)'
+      'El usuario no existe o hay un error en tus credenciales'
     );
   }
 
@@ -53,19 +76,25 @@ document.getElementById('login-form')?.addEventListener('submit', async e => {
   window.location.href = 'dashboard.html';
 });
 
-// 2) Registro nuevo usuario (solo al hacer clic)
+//
+// 5) Registrar nuevo usuario (redirige a solicitud.html)
+//
 document.getElementById('register-btn')?.addEventListener('click', e => {
   e.preventDefault();
   window.location.href = 'solicitud.html';
 });
 
-// 3) OAuth Google
+//
+// 6) OAuth Google
+//
 document.getElementById('google-btn')?.addEventListener('click', async () => {
   const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
   if (error) showMsg(error.message);
 });
 
-// 4) Funcionalidad Modal Reset Password
+//
+// 7) Modal Reset Password
+//
 const resetBtn        = document.getElementById('reset-btn');
 const resetModal      = document.getElementById('reset-modal');
 const resetCancelBtn  = document.getElementById('reset-cancel-btn');
@@ -83,19 +112,15 @@ resetBtn?.addEventListener('click', e => {
   resetModal.classList.remove('hidden');
 });
 
-// Cerrar modal con botón
+// Cerrar modal
 resetCancelBtn?.addEventListener('click', () => {
   resetModal.classList.add('hidden');
 });
-
-// Cerrar modal al clic fuera del contenido
 resetModal?.addEventListener('click', e => {
-  if (e.target === resetModal) {
-    resetModal.classList.add('hidden');
-  }
+  if (e.target === resetModal) resetModal.classList.add('hidden');
 });
 
-// Enviar solicitud de restablecer contraseña
+// Enviar reset password
 resetSubmitBtn?.addEventListener('click', async () => {
   const email = resetEmailInput.value.trim();
   if (!email) {
@@ -103,8 +128,9 @@ resetSubmitBtn?.addEventListener('click', async () => {
     return;
   }
 
-  // Validar que el correo está registrado
-  const { data: exists, error: rpcError } = await supabase.rpc('email_exists', { p_email: email });
+  // RPC verifica existencia de email
+  const { data: exists, error: rpcError } = await supabase
+    .rpc('email_exists', { p_email: email });
   if (rpcError) {
     console.error('RPC error:', rpcError);
     resetMsgModal.textContent = 'Error al verificar el correo';
@@ -125,8 +151,9 @@ resetSubmitBtn?.addEventListener('click', async () => {
   }
 });
 
-
-// 5) Módulo de Roles & Permisos (solo en roles.html)
+//
+// 8) Módulo de Roles & Permisos (solo en roles.html)
+//
 const requestsTable   = document.querySelector('#requests-table tbody');
 const pendingSection  = document.getElementById('pending-section');
 const assignSection   = document.getElementById('assign-section');
@@ -145,10 +172,7 @@ async function loadRequests() {
     .select('id,full_name,email')
     .eq('role_id', 0)
     .order('created_at', { ascending: true });
-  if (error) {
-    console.error(error);
-    return;
-  }
+  if (error) return console.error(error);
 
   requestsTable.innerHTML = '';
   data.forEach(u => {
@@ -167,9 +191,8 @@ async function loadRequests() {
     requestsTable.appendChild(tr);
   });
 
-  document.querySelectorAll('.authorize-btn').forEach(btn =>
-    btn.addEventListener('click', openAssign)
-  );
+  document.querySelectorAll('.authorize-btn')
+    .forEach(btn => btn.addEventListener('click', openAssign));
 }
 
 async function openAssign(e) {
@@ -180,24 +203,24 @@ async function openAssign(e) {
 
   userIdInput.value        = id;
   userNameSpan.textContent = name;
-  userEmailSpan.textContent = email;
+  userEmailSpan.textContent= email;
   assignMsg.textContent    = '';
 
-  // Cargar roles
+  // roles
   const { data: roles, error: errR } = await supabase
     .from('roles').select('id,name').order('id');
-  if (errR) { console.error(errR); return; }
+  if (errR) return console.error(errR);
   roleSelect.innerHTML = '<option value="">Selecciona rol</option>';
   roles.forEach(r => {
     roleSelect.innerHTML += `<option value="${r.id}">${r.name}</option>`;
   });
 
-  // Cargar módulos
+  // módulos
   const { data: modules, error: errM } = await supabase
     .from('modules').select('id,name').order('id');
-  if (errM) { console.error(errM); return; }
+  if (errM) return console.error(errM);
 
-  // Cargar permisos actuales del usuario
+  // permisos actuales
   const { data: userMods } = await supabase
     .from('user_modules')
     .select('module_id')
@@ -228,8 +251,8 @@ cancelAssignBtn?.addEventListener('click', () => {
 
 assignForm?.addEventListener('submit', async e => {
   e.preventDefault();
-  assignMsg.className    = '';
-  assignMsg.textContent  = '';
+  assignMsg.className   = '';
+  assignMsg.textContent = '';
 
   const uid    = userIdInput.value;
   const roleId = parseInt(roleSelect.value, 10);
@@ -254,8 +277,9 @@ assignForm?.addEventListener('submit', async e => {
   await supabase.from('user_modules').delete().eq('user_id', uid);
 
   // 3) Insertar nuevos permisos
-  const checkedBoxes = Array.from(document.querySelectorAll('.module-checkbox:checked'));
-  const inserts = checkedBoxes.map(cb => ({
+  const inserts = Array.from(
+    document.querySelectorAll('.module-checkbox:checked')
+  ).map(cb => ({
     user_id: uid,
     module_id: parseInt(cb.value, 10),
     allowed: true
@@ -279,7 +303,7 @@ assignForm?.addEventListener('submit', async e => {
   }, 1000);
 });
 
-// Inicializar módulo de Roles si estamos en roles.html
+// Inicializa Roles si existe la tabla de solicitudes
 if (requestsTable) {
   loadRequests();
 }
