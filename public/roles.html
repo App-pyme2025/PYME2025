@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Roles & Permisos – PYME2025</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    h1, h2 { color: #5DADE2; }
+    section { max-width: 900px; margin: 20px auto; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    table th, table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    table th { background: #5DADE2; color: #fff; }
+    .hidden { display: none; }
+    #modules-list label { display: block; margin: 5px 0; }
+    #assign-form {
+      background: #fff; padding: 20px; border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    #assign-form select, #assign-form button { margin-top: 10px; }
+    #assign-msg { margin-top: 10px; }
+    #assign-msg.error { color: red; }
+    #assign-msg:not(.error) { color: green; }
+  </style>
+</head>
+<body>
+  <header><h1>Gestión de Roles & Permisos</h1></header>
+
+  <!-- Sección 1: Solicitudes pendientes -->
+  <section id="pending-section">
+    <h2>Solicitudes de Alta</h2>
+    <table id="requests-table">
+      <thead>
+        <tr><th>Nombre</th><th>Email</th><th>Acción</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <!-- Sección 2: Asignación de Rol y Permisos -->
+  <section id="assign-section" class="hidden">
+    <h2>Asignar Rol y Permisos</h2>
+    <form id="assign-form">
+      <input type="hidden" id="user-id">
+      <p><strong>Usuario:</strong> <span id="user-name"></span></p>
+      <p><strong>Email:</strong> <span id="user-email"></span></p>
+
+      <label for="role-select">Rol:</label>
+      <select id="role-select">
+        <option value="">Selecciona rol</option>
+      </select>
+
+      <h3>Permisos de Módulos</h3>
+      <div id="modules-list"></div>
+
+      <button type="submit">Guardar</button>
+      <button id="cancel-assign" type="button">Cancelar</button>
+      <div id="assign-msg"></div>
+    </form>
+  </section>
+
+  <script type="module" src="../src/roles.js"></script>
+</body>
+</html>

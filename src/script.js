@@ -124,3 +124,162 @@ resetSubmitBtn?.addEventListener('click', async () => {
     resetMsgModal.textContent = 'Revisa tu correo para el enlace';
   }
 });
+
+
+// 5) Módulo de Roles & Permisos (solo en roles.html)
+const requestsTable   = document.querySelector('#requests-table tbody');
+const pendingSection  = document.getElementById('pending-section');
+const assignSection   = document.getElementById('assign-section');
+const assignForm      = document.getElementById('assign-form');
+const userIdInput     = document.getElementById('user-id');
+const userNameSpan    = document.getElementById('user-name');
+const userEmailSpan   = document.getElementById('user-email');
+const roleSelect      = document.getElementById('role-select');
+const modulesList     = document.getElementById('modules-list');
+const assignMsg       = document.getElementById('assign-msg');
+const cancelAssignBtn = document.getElementById('cancel-assign');
+
+async function loadRequests() {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id,full_name,email')
+    .eq('role_id', 0)
+    .order('created_at', { ascending: true });
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  requestsTable.innerHTML = '';
+  data.forEach(u => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${u.full_name}</td>
+      <td>${u.email}</td>
+      <td>
+        <button class="authorize-btn"
+                data-id="${u.id}"
+                data-name="${u.full_name}"
+                data-email="${u.email}">
+          Autorizar
+        </button>
+      </td>`;
+    requestsTable.appendChild(tr);
+  });
+
+  document.querySelectorAll('.authorize-btn').forEach(btn =>
+    btn.addEventListener('click', openAssign)
+  );
+}
+
+async function openAssign(e) {
+  const btn   = e.target;
+  const id    = btn.dataset.id;
+  const name  = btn.dataset.name;
+  const email = btn.dataset.email;
+
+  userIdInput.value        = id;
+  userNameSpan.textContent = name;
+  userEmailSpan.textContent = email;
+  assignMsg.textContent    = '';
+
+  // Cargar roles
+  const { data: roles, error: errR } = await supabase
+    .from('roles').select('id,name').order('id');
+  if (errR) { console.error(errR); return; }
+  roleSelect.innerHTML = '<option value="">Selecciona rol</option>';
+  roles.forEach(r => {
+    roleSelect.innerHTML += `<option value="${r.id}">${r.name}</option>`;
+  });
+
+  // Cargar módulos
+  const { data: modules, error: errM } = await supabase
+    .from('modules').select('id,name').order('id');
+  if (errM) { console.error(errM); return; }
+
+  // Cargar permisos actuales del usuario
+  const { data: userMods } = await supabase
+    .from('user_modules')
+    .select('module_id')
+    .eq('user_id', id);
+  const userModIds = userMods.map(um => um.module_id);
+
+  modulesList.innerHTML = '';
+  modules.forEach(m => {
+    const checked = userModIds.includes(m.id) ? 'checked' : '';
+    modulesList.innerHTML += `
+      <label>
+        <input type="checkbox"
+               class="module-checkbox"
+               value="${m.id}"
+               ${checked}>
+        ${m.name}
+      </label>`;
+  });
+
+  pendingSection.classList.add('hidden');
+  assignSection.classList.remove('hidden');
+}
+
+cancelAssignBtn?.addEventListener('click', () => {
+  assignSection.classList.add('hidden');
+  pendingSection.classList.remove('hidden');
+});
+
+assignForm?.addEventListener('submit', async e => {
+  e.preventDefault();
+  assignMsg.className    = '';
+  assignMsg.textContent  = '';
+
+  const uid    = userIdInput.value;
+  const roleId = parseInt(roleSelect.value, 10);
+  if (!roleId) {
+    assignMsg.className   = 'error';
+    assignMsg.textContent = 'Selecciona un rol';
+    return;
+  }
+
+  // 1) Actualizar role_id
+  const { error: err1 } = await supabase
+    .from('profiles')
+    .update({ role_id: roleId })
+    .eq('id', uid);
+  if (err1) {
+    assignMsg.className   = 'error';
+    assignMsg.textContent = err1.message;
+    return;
+  }
+
+  // 2) Limpiar permisos previos
+  await supabase.from('user_modules').delete().eq('user_id', uid);
+
+  // 3) Insertar nuevos permisos
+  const checkedBoxes = Array.from(document.querySelectorAll('.module-checkbox:checked'));
+  const inserts = checkedBoxes.map(cb => ({
+    user_id: uid,
+    module_id: parseInt(cb.value, 10),
+    allowed: true
+  }));
+  if (inserts.length) {
+    const { error: err2 } = await supabase
+      .from('user_modules')
+      .insert(inserts);
+    if (err2) {
+      assignMsg.className   = 'error';
+      assignMsg.textContent = err2.message;
+      return;
+    }
+  }
+
+  assignMsg.textContent = 'Permisos guardados exitosamente';
+  await loadRequests();
+  setTimeout(() => {
+    assignSection.classList.add('hidden');
+    pendingSection.classList.remove('hidden');
+  }, 1000);
+});
+
+// Inicializar módulo de Roles si estamos en roles.html
+if (requestsTable) {
+  loadRequests();
+}
