@@ -2,17 +2,118 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Solicitud de Alta – PYME2025</title>
-  <link rel="stylesheet" href="styles.css">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Solicitud de Registro – PYME2025</title>
+  <style>
+    :root {
+      --azul-claro: #5DADE2;
+      --gris-claro: #E5E7E9;
+      --gris-oscuro: #566573;
+      --blanco: #FFFFFF;
+    }
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--gris-claro);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    .cajaregistro {
+      background: var(--blanco);
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      width: 320px;
+      text-align: center;
+    }
+
+    .cajaregistro h1 {
+      margin-bottom: 20px;
+      color: var(--azul-claro);
+      font-size: 1.5em;
+    }
+
+    .cajaregistro input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid var(--gris-oscuro);
+      border-radius: 4px;
+    }
+
+    .cajaregistro button {
+      width: 100%;
+      padding: 10px;
+      margin: 12px 0;
+      border: none;
+      border-radius: 4px;
+      background: var(--azul-claro);
+      color: var(--blanco);
+      cursor: pointer;
+      font-size: 1em;
+    }
+
+    .cajaregistro #req-msg {
+      color: red;
+      min-height: 1.2em;
+      font-size: 0.9em;
+    }
+
+    .cajaregistro a {
+      display: block;
+      margin-top: 10px;
+      font-size: 0.9em;
+      color: var(--gris-oscuro);
+      text-decoration: none;
+    }
+
+    .cajaregistro a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
-  <header><h1>Solicitar Cuenta</h1></header>
-  <section>
-    <form id="solicitud-form">
-      <!-- Obligatorios -->
-      <input name="full_name" placeholder="Nombre completo" required>
-      <input name="address"    placeholder="Dirección"      required>
-      <input name="phone"      placeholder="Teléfono"         required>
-      <input type="email" name="email" placeholder="Correo"  required>
-      <input name="emergency_phone"    placeholder="Tel. emergencia" required>
-     
+  <div class="cajaregistro">
+    <h1>Registro PYME2025</h1>
+
+    <form id="request-form">
+      <input id="req-full-name"
+             type="text"
+             placeholder="Nombre completo"
+             required>
+
+      <input id="req-email"
+             type="email"
+             placeholder="Correo electrónico"
+             required>
+
+      <input id="req-password"
+             type="password"
+             placeholder="Contraseña"
+             required>
+
+      <input id="req-password-confirm"
+             type="password"
+             placeholder="Confirmar contraseña"
+             required>
+
+      <button type="submit">Enviar Solicitud</button>
+
+      <div id="req-msg"></div>
+    </form>
+
+    <a href="login.html">← Volver al Login</a>
+  </div>
+
+  <script type="module" src="../src/solicitud.js"></script>
+</body>
+</html>

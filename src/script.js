@@ -6,7 +6,7 @@ import { supabase } from './supabaseClient.js';
 // 0) Auth Guard: protege todas las páginas excepto login.html y solicitud.html
 //
 (async () => {
-  const publicPages = ['login.html', 'solicitud.html'];
+  const publicPages = ['index.html','login.html', 'solicitud.html'];
   const page = window.location.pathname.split('/').pop();
   const { data: { session } } = await supabase.auth.getSession();
   if (!session && !publicPages.includes(page)) {
