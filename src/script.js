@@ -3,21 +3,20 @@
 import { supabase } from './supabaseClient.js';
 
 //
-// 0) Auth Guard: redirige a login si no hay sesión activa
+// 0) Auth Guard: protege todas las páginas excepto login.html y solicitud.html
 //
 (async () => {
-  const publicPages = ['login.html', 'solicitud.html', 'reset-password.html'];
-  const currentPage = window.location.pathname.split('/').pop();
-  if (!publicPages.includes(currentPage)) {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      window.location.href = 'login.html';
-    }
+  const publicPages = ['login.html', 'solicitud.html'];
+  const page = window.location.pathname.split('/').pop();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session && !publicPages.includes(page)) {
+    // Redirige al login si no hay sesión
+    window.location.href = 'login.html';
   }
 })();
 
 //
-// 1) Mensajes
+// 1) Muestra mensaje en el div #msg
 //
 function showMsg(text) {
   const el = document.getElementById('msg');
@@ -25,7 +24,7 @@ function showMsg(text) {
 }
 
 //
-// 2) Idle Watcher (30 min inactividad -> logout)
+// 2) Idle watcher: cierra sesión tras 30 min de inactividad
 //
 const IDLE_TIMEOUT = 30 * 60 * 1000;
 function resetIdleTimer() {
@@ -46,7 +45,7 @@ function setupIdleWatcher() {
 }
 
 //
-// 3) Si ya hay sesión activa, ir a dashboard
+// 3) Si ya hay sesión activa en login, ir al dashboard
 //
 window.addEventListener('DOMContentLoaded', async () => {
   const { data: { session } } = await supabase.auth.getSession();
@@ -57,27 +56,25 @@ window.addEventListener('DOMContentLoaded', async () => {
 });
 
 //
-// 4) Login con email/clave
+// 4) Login con email/contraseña
 //
 document.getElementById('login-form')?.addEventListener('submit', async e => {
   e.preventDefault();
   showMsg('');
   const email    = document.getElementById('login-id').value.trim();
   const password = document.getElementById('login-password').value;
-
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
     return showMsg(
-      'El usuario no existe o hay un error en tus credenciales'
+      'El usuario no existe o hay un error en tus credenciales (Usuario/contraseña)'
     );
   }
-
   setupIdleWatcher();
   window.location.href = 'dashboard.html';
 });
 
 //
-// 5) Registrar nuevo usuario (redirige a solicitud.html)
+// 5) Registro nuevo usuario (redirige a solicitud.html)
 //
 document.getElementById('register-btn')?.addEventListener('click', e => {
   e.preventDefault();
@@ -128,7 +125,7 @@ resetSubmitBtn?.addEventListener('click', async () => {
     return;
   }
 
-  // RPC verifica existencia de email
+  // Validar existencia de correo vía RPC
   const { data: exists, error: rpcError } = await supabase
     .rpc('email_exists', { p_email: email });
   if (rpcError) {
@@ -206,7 +203,7 @@ async function openAssign(e) {
   userEmailSpan.textContent= email;
   assignMsg.textContent    = '';
 
-  // roles
+  // Cargar roles
   const { data: roles, error: errR } = await supabase
     .from('roles').select('id,name').order('id');
   if (errR) return console.error(errR);
@@ -215,12 +212,12 @@ async function openAssign(e) {
     roleSelect.innerHTML += `<option value="${r.id}">${r.name}</option>`;
   });
 
-  // módulos
+  // Cargar módulos
   const { data: modules, error: errM } = await supabase
     .from('modules').select('id,name').order('id');
   if (errM) return console.error(errM);
 
-  // permisos actuales
+  // Permisos actuales del usuario
   const { data: userMods } = await supabase
     .from('user_modules')
     .select('module_id')
@@ -303,7 +300,7 @@ assignForm?.addEventListener('submit', async e => {
   }, 1000);
 });
 
-// Inicializa Roles si existe la tabla de solicitudes
+// Inicializa Roles si estamos en roles.html
 if (requestsTable) {
   loadRequests();
 }
