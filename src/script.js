@@ -6,11 +6,10 @@ import { supabase } from './supabaseClient.js';
 // 0) Auth Guard: protege todas las páginas excepto login.html y solicitud.html
 //
 (async () => {
-  const publicPages = ['index.html','login.html', 'solicitud.html'];
+  const publicPages = ['index.html', 'login.html', 'solicitud.html'];
   const page = window.location.pathname.split('/').pop();
   const { data: { session } } = await supabase.auth.getSession();
   if (!session && !publicPages.includes(page)) {
-    // Redirige al login si no hay sesión
     window.location.href = 'login.html';
   }
 })();
@@ -20,7 +19,7 @@ import { supabase } from './supabaseClient.js';
 //
 function showMsg(text) {
   const el = document.getElementById('msg');
-  el && (el.textContent = text);
+  if (el) el.textContent = text;
 }
 
 //
@@ -65,9 +64,7 @@ document.getElementById('login-form')?.addEventListener('submit', async e => {
   const password = document.getElementById('login-password').value;
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
-    return showMsg(
-      'El usuario no existe o hay un error en tus credenciales (Usuario/contraseña)'
-    );
+    return showMsg('El usuario no existe o hay un error en tus credenciales (Usuario/contraseña)');
   }
   setupIdleWatcher();
   window.location.href = 'dashboard.html';
@@ -99,7 +96,6 @@ const resetSubmitBtn  = document.getElementById('reset-submit-btn');
 const resetEmailInput = document.getElementById('reset-email-input');
 const resetMsgModal   = document.getElementById('reset-msg');
 
-// Abrir modal
 resetBtn?.addEventListener('click', e => {
   e.preventDefault();
   showMsg('');
@@ -109,7 +105,6 @@ resetBtn?.addEventListener('click', e => {
   resetModal.classList.remove('hidden');
 });
 
-// Cerrar modal
 resetCancelBtn?.addEventListener('click', () => {
   resetModal.classList.add('hidden');
 });
@@ -117,7 +112,6 @@ resetModal?.addEventListener('click', e => {
   if (e.target === resetModal) resetModal.classList.add('hidden');
 });
 
-// Enviar reset password
 resetSubmitBtn?.addEventListener('click', async () => {
   const email = resetEmailInput.value.trim();
   if (!email) {
@@ -125,7 +119,6 @@ resetSubmitBtn?.addEventListener('click', async () => {
     return;
   }
 
-  // Validar existencia de correo vía RPC
   const { data: exists, error: rpcError } = await supabase
     .rpc('email_exists', { p_email: email });
   if (rpcError) {
@@ -138,7 +131,6 @@ resetSubmitBtn?.addEventListener('click', async () => {
     return;
   }
 
-  // Enviar correo de restablecimiento
   const { error } = await supabase.auth.resetPasswordForEmail(email);
   if (error) {
     resetMsgModal.textContent = error.message;
@@ -198,12 +190,11 @@ async function openAssign(e) {
   const name  = btn.dataset.name;
   const email = btn.dataset.email;
 
-  userIdInput.value        = id;
-  userNameSpan.textContent = name;
-  userEmailSpan.textContent= email;
-  assignMsg.textContent    = '';
+  userIdInput.value         = id;
+  userNameSpan.textContent  = name;
+  userEmailSpan.textContent = email;
+  assignMsg.textContent     = '';
 
-  // Cargar roles
   const { data: roles, error: errR } = await supabase
     .from('roles').select('id,name').order('id');
   if (errR) return console.error(errR);
@@ -212,12 +203,10 @@ async function openAssign(e) {
     roleSelect.innerHTML += `<option value="${r.id}">${r.name}</option>`;
   });
 
-  // Cargar módulos
   const { data: modules, error: errM } = await supabase
     .from('modules').select('id,name').order('id');
   if (errM) return console.error(errM);
 
-  // Permisos actuales del usuario
   const { data: userMods } = await supabase
     .from('user_modules')
     .select('module_id')
@@ -259,7 +248,6 @@ assignForm?.addEventListener('submit', async e => {
     return;
   }
 
-  // 1) Actualizar role_id
   const { error: err1 } = await supabase
     .from('profiles')
     .update({ role_id: roleId })
@@ -270,10 +258,8 @@ assignForm?.addEventListener('submit', async e => {
     return;
   }
 
-  // 2) Limpiar permisos previos
   await supabase.from('user_modules').delete().eq('user_id', uid);
 
-  // 3) Insertar nuevos permisos
   const inserts = Array.from(
     document.querySelectorAll('.module-checkbox:checked')
   ).map(cb => ({
@@ -300,7 +286,70 @@ assignForm?.addEventListener('submit', async e => {
   }, 1000);
 });
 
-// Inicializa Roles si estamos en roles.html
 if (requestsTable) {
   loadRequests();
+}
+
+//
+// 9) Solicitud de alta de usuarios (solo en solicitud.html)
+//
+if (window.location.pathname.endsWith('solicitud.html')) {
+  const form       = document.getElementById('request-form');
+  const fullNameEl = document.getElementById('req-full-name');
+  const emailEl    = document.getElementById('req-email');
+  const passEl     = document.getElementById('req-password');
+  const pass2El    = document.getElementById('req-password-confirm');
+  const msgEl      = document.getElementById('req-msg');
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    msgEl.textContent = '';
+    msgEl.style.color = 'red';
+
+    const fullName = fullNameEl.value.trim();
+    const email    = emailEl.value.trim();
+    const password = passEl.value;
+    const confirm  = pass2El.value;
+
+    if (!fullName || !email || !password) {
+      msgEl.textContent = 'Completa todos los campos.';
+      return;
+    }
+    if (password !== confirm) {
+      msgEl.textContent = 'Las contraseñas no coinciden.';
+      return;
+    }
+
+    const { data: signData, error: signError } = await supabase.auth.signUp({
+      email,
+      password
+    });
+    if (signError) {
+      msgEl.textContent = signError.message;
+      return;
+    }
+
+    const user = signData.user;
+    if (!user) {
+      msgEl.textContent = 'Error al crear la cuenta.';
+      return;
+    }
+
+    const { error: profError } = await supabase
+      .from('profiles')
+      .insert({
+        id: user.id,
+        full_name: fullName,
+        email: email,
+        role_id: 0
+      });
+    if (profError) {
+      msgEl.textContent = profError.message;
+      return;
+    }
+
+    msgEl.style.color = 'green';
+    msgEl.textContent = 'Solicitud enviada. Espera autorización de tu cuenta.';
+    form.reset();
+  });
 }
